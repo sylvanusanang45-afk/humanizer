@@ -1,5 +1,4 @@
 
-import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   PenLine,
@@ -11,6 +10,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react'
 
 const navigation = [
@@ -24,33 +24,55 @@ const navigation = [
   },
 ]
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({
+  collapsed,
+  onToggle,
+  mobile = false,
+  onClose,
+}) {
   const navigate = useNavigate()
 
   const handleNewWriting = () => {
     navigate('/', {
       state: { newWriting: true },
     })
+
+    onClose?.()
   }
+
+  const sidebarWidth = mobile
+    ? 'w-[280px] px-5'
+    : collapsed
+      ? 'w-[84px] px-3'
+      : 'w-[260px] px-5'
 
   return (
     <aside
+      id={mobile ? 'mobile-sidebar' : undefined}
       className={`flex h-screen shrink-0 flex-col border-r border-[#eae8e1] bg-[#f5f3ed] py-7 transition-all duration-300 ${
-        collapsed ? 'w-[84px] px-3' : 'w-[260px] px-5'
-      }`}
+        mobile
+          ? 'fixed inset-y-0 left-0 z-50 overflow-y-auto shadow-2xl'
+          : ''
+      } ${sidebarWidth}`}
     >
       {/* Brand */}
-      <div className={`mb-12 flex items-center ${
-        collapsed ? 'flex-col gap-5' : 'justify-between'
-      }`}>
-        <div className={`flex items-center ${
-          collapsed ? 'justify-center' : 'gap-3'
-        }`}>
+      <div
+        className={`mb-12 flex items-center ${
+          collapsed && !mobile
+            ? 'flex-col gap-5'
+            : 'justify-between'
+        }`}
+      >
+        <div
+          className={`flex items-center ${
+            collapsed && !mobile ? 'justify-center' : 'gap-3'
+          }`}
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-white">
             <PenLine size={21} strokeWidth={1.8} />
           </div>
 
-          {!collapsed && (
+          {(!collapsed || mobile) && (
             <div>
               <h1 className="font-serif text-xl font-semibold tracking-tight">
                 humanizer<span className="text-brand">.</span>
@@ -62,19 +84,30 @@ export default function Sidebar({ collapsed, onToggle }) {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="rounded-lg p-2 text-muted transition hover:bg-white"
-        >
-          {collapsed ? (
-            <ChevronRight size={17} />
-          ) : (
-            <ChevronLeft size={17} />
-          )}
-        </button>
+        {mobile ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close navigation"
+            className="rounded-lg p-2 text-muted transition hover:bg-white hover:text-brand"
+          >
+            <X size={20} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="rounded-lg p-2 text-muted transition hover:bg-white"
+          >
+            {collapsed ? (
+              <ChevronRight size={17} />
+            ) : (
+              <ChevronLeft size={17} />
+            )}
+          </button>
+        )}
       </div>
 
       {/* New writing */}
@@ -83,18 +116,18 @@ export default function Sidebar({ collapsed, onToggle }) {
         onClick={handleNewWriting}
         title="New writing"
         className={`mb-9 flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-brand-dark ${
-          collapsed ? 'aspect-square' : ''
+          collapsed && !mobile ? 'aspect-square' : ''
         }`}
       >
         <Plus size={17} />
-        {!collapsed && 'New writing'}
+        {(!collapsed || mobile) && 'New writing'}
       </button>
 
       {/* Navigation */}
       <div className="flex-1">
         {navigation.map((section) => (
           <div key={section.label}>
-            {!collapsed && (
+            {(!collapsed || mobile) && (
               <p className="mb-4 px-3 text-[10px] font-semibold uppercase tracking-[2px] text-muted">
                 {section.label}
               </p>
@@ -109,10 +142,11 @@ export default function Sidebar({ collapsed, onToggle }) {
                     key={item.path}
                     to={item.path}
                     end={item.path === '/'}
-                    title={collapsed ? item.name : undefined}
+                    onClick={onClose}
+                    title={collapsed && !mobile ? item.name : undefined}
                     className={({ isActive }) =>
                       `flex items-center rounded-xl py-3 text-sm transition ${
-                        collapsed
+                        collapsed && !mobile
                           ? 'justify-center px-2'
                           : 'gap-3 px-3'
                       } ${
@@ -123,7 +157,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                     }
                   >
                     <Icon size={18} strokeWidth={1.8} />
-                    {!collapsed && item.name}
+                    {(!collapsed || mobile) && item.name}
                   </NavLink>
                 )
               })}
@@ -134,7 +168,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
       {/* Bottom section */}
       <div className="space-y-5">
-        {!collapsed && (
+        {(!collapsed || mobile) && (
           <div className="rounded-2xl border border-[#e7e5dc] bg-white/70 p-4">
             <div className="mb-2 flex items-center gap-2 text-brand">
               <Sparkles size={16} />
@@ -149,6 +183,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
             <NavLink
               to="/my-voice"
+              onClick={onClose}
               className="text-xs font-semibold text-brand hover:underline"
             >
               Set up your voice →
@@ -158,16 +193,19 @@ export default function Sidebar({ collapsed, onToggle }) {
 
         <NavLink
           to="/settings"
-          title={collapsed ? 'Settings' : undefined}
+          onClick={onClose}
+          title={collapsed && !mobile ? 'Settings' : undefined}
           className={`flex items-center rounded-xl py-2 text-sm text-[#77796f] transition hover:bg-white ${
-            collapsed ? 'justify-center px-2' : 'gap-3 px-3'
+            collapsed && !mobile
+              ? 'justify-center px-2'
+              : 'gap-3 px-3'
           }`}
         >
           <Settings size={18} />
-          {!collapsed && 'Settings'}
+          {(!collapsed || mobile) && 'Settings'}
         </NavLink>
 
-        {!collapsed && (
+        {(!collapsed || mobile) && (
           <div className="border-t border-[#e7e5dc] pt-4">
             <p className="text-xs text-muted">Made for your words.</p>
             <p className="mt-1 text-[10px] text-[#aaa99f]">
