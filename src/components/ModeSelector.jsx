@@ -56,10 +56,7 @@ const modes = [
   },
 ]
 
-export default function ModeSelector({
-  selectedMode,
-  onSelect,
-}) {
+export default function ModeSelector({ value, onChange }) {
   return (
     <section className="space-y-4">
       <div>
@@ -74,13 +71,13 @@ export default function ModeSelector({
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {modes.map((mode) => {
           const Icon = mode.icon
-          const isSelected = selectedMode === mode.id
+          const isSelected = value === mode.id
 
           return (
             <button
               key={mode.id}
               type="button"
-              onClick={() => onSelect(mode.id)}
+              onClick={() => onChange(mode.id)}
               aria-pressed={isSelected}
               className={`group relative flex min-h-[112px] flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 ${
                 isSelected

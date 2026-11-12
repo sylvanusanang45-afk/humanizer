@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -138,10 +139,14 @@ export default function MyVoice() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(
+        console.error('Voice analysis validation error:', data)
+
+        const validationMessage =
+          data?.errors?.map((item) => item.message).join(' ') ||
           data?.message ||
-            'Something went wrong while analyzing your writing voice.',
-        )
+          'Something went wrong while analyzing your writing voice.'
+
+        throw new Error(validationMessage)
       }
 
       const profile = data?.data?.profile
@@ -170,47 +175,43 @@ export default function MyVoice() {
   }
 
   return (
-    <div className="min-h-screen bg-cream px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
       <div className="mx-auto max-w-5xl">
+
         {/* Header */}
-        <div className="mb-8">
+        <header className="mb-10">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-forest/55 transition hover:text-forest"
+            className="mb-6 inline-flex items-center gap-2 text-xs font-medium text-muted transition hover:text-brand"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={15} />
             Back to workspace
           </button>
 
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mb-3 flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest text-cream">
-                  <Sparkles size={19} />
-                </div>
+              <p className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[2px] text-muted">
+                <Sparkles size={14} className="text-brand" />
+                Personal writing profile
+              </p>
 
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-forest/50">
-                  My Voice
-                </span>
-              </div>
-
-              <h1 className="font-serif text-4xl leading-tight text-forest sm:text-5xl">
+              <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
                 Sound Like You.
               </h1>
 
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-forest/60 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
                 Give Humanizer a few examples of your writing so it can
                 understand how you naturally communicate.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 rounded-full border border-forest/10 bg-white/60 px-4 py-2 text-xs text-forest/55">
-              <CheckCircle2 size={14} />
+            <div className="flex w-fit items-center gap-2 rounded-full border border-[#e7e5dc] bg-white px-4 py-2 text-xs text-muted">
+              <CheckCircle2 size={14} className="text-brand" />
               Saved to your account
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Feedback */}
         {error && (
@@ -227,310 +228,342 @@ export default function MyVoice() {
           </div>
         )}
 
-        {/* Intro card */}
-        <section className="mb-6 rounded-3xl border border-forest/10 bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cream text-forest">
-              <Brain size={23} />
-            </div>
+        <div className="space-y-8">
 
-            <div>
-              <h2 className="font-serif text-2xl text-forest">
-                Teach Humanizer your writing style
-              </h2>
+          {/* Intro */}
+          <section className="rounded-3xl border border-[#eae8e1] bg-white p-6 shadow-[0_4px_24px_rgba(37,42,37,0.03)] sm:p-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#edf2eb] text-brand">
+                <Brain size={21} />
+              </div>
 
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-forest/55">
-                Add 3–5 examples of your real writing. Humanizer looks for
-                patterns in your tone, vocabulary, sentence structure, rhythm,
-                personality, and other writing habits.
-              </p>
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[1.5px] text-muted">
+                  Teach Humanizer
+                </p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {[
-                  'Tone',
-                  'Vocabulary',
-                  'Sentence style',
-                  'Rhythm',
-                  'Personality',
-                  'Writing patterns',
-                ].map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full bg-cream px-3 py-1.5 text-xs text-forest/55"
-                  >
-                    {item}
-                  </span>
-                ))}
+                <h2 className="font-serif text-2xl font-semibold text-ink">
+                  Your writing has a voice.
+                </h2>
+
+                <p className="mt-2 max-w-3xl text-sm leading-7 text-muted">
+                  Add 3–5 examples of your real writing. Humanizer looks for
+                  patterns in your tone, vocabulary, sentence structure,
+                  rhythm, personality, and other writing habits.
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {[
+                    'Tone',
+                    'Vocabulary',
+                    'Sentence style',
+                    'Rhythm',
+                    'Personality',
+                    'Writing patterns',
+                  ].map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full bg-[#f3f2ed] px-3 py-1.5 text-xs text-muted"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
-          {/* Add sample */}
-          <section className="rounded-3xl border border-forest/10 bg-white p-5 shadow-sm sm:p-7">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <FileText size={17} className="text-terracotta" />
-                  <h2 className="font-serif text-2xl text-forest">
-                    Writing samples
-                  </h2>
+          {/* Main content */}
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+
+            {/* Writing samples */}
+            <section className="overflow-hidden rounded-3xl border border-[#eae8e1] bg-white shadow-[0_4px_24px_rgba(37,42,37,0.03)]">
+              <div className="flex items-center justify-between border-b border-[#eeece6] px-6 py-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf2eb] text-brand">
+                    <FileText size={18} />
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-semibold text-ink">
+                      Writing samples
+                    </h2>
+
+                    <p className="mt-0.5 text-[11px] text-muted">
+                      {voiceSamples.length} of {MAX_SAMPLES} samples saved
+                    </p>
+                  </div>
                 </div>
 
-                <p className="mt-1 text-sm text-forest/50">
-                  {voiceSamples.length} of {MAX_SAMPLES} samples saved
-                </p>
+                <span className="text-xs text-muted">
+                  {wordCount} words
+                </span>
               </div>
 
-              <span className="rounded-full bg-cream px-3 py-1.5 text-xs text-forest/50">
-                {wordCount} words
-              </span>
-            </div>
+              <div className="p-6">
+                <textarea
+                  value={sampleText}
+                  onChange={(event) => {
+                    setSampleText(event.target.value)
+                    setError('')
+                    setSuccessMessage('')
+                  }}
+                  placeholder="Paste something you have actually written — an email, message, essay, post, journal entry, or anything else that sounds like you..."
+                  className="min-h-[230px] w-full resize-y rounded-xl border border-[#eae8e1] bg-[#fcfbf8] p-4 text-sm leading-7 text-ink outline-none transition placeholder:text-[#aaa99f] focus:border-[#9caf9d] focus:bg-white"
+                />
 
-            <textarea
-              value={sampleText}
-              onChange={(event) => {
-                setSampleText(event.target.value)
-                setError('')
-                setSuccessMessage('')
-              }}
-              placeholder="Paste something you have actually written — an email, message, essay, post, journal entry, or anything else that sounds like you..."
-              className="min-h-[240px] w-full resize-none rounded-2xl border border-forest/10 bg-cream/50 p-4 text-sm leading-7 text-forest outline-none transition placeholder:text-forest/30 focus:border-forest/30 focus:bg-white"
-            />
+                <div className="mt-5 flex flex-col gap-3 border-t border-[#eeece6] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-muted">
+                    Aim for at least {MIN_WORDS} words. More natural writing
+                    gives better results.
+                  </p>
 
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-5 text-forest/40">
-                Aim for at least {MIN_WORDS} words. More natural writing gives
-                better results.
-              </p>
+                  <button
+                    type="button"
+                    onClick={handleAddSample}
+                    disabled={
+                      isAddingSample ||
+                      voiceSamples.length >= MAX_SAMPLES ||
+                      wordCount < MIN_WORDS
+                    }
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {isAddingSample ? (
+                      <>
+                        <LoaderCircle
+                          size={16}
+                          className="animate-spin"
+                        />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        Add sample
+                        <ArrowUpRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Saved samples */}
+                {voiceSamples.length > 0 && (
+                  <div className="mt-7">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-[1.5px] text-muted">
+                        Saved samples
+                      </p>
+
+                      <span className="text-[11px] text-muted">
+                        {voiceSamples.length}/{MAX_SAMPLES}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {voiceSamples.map((sample, index) => (
+                        <div
+                          key={`${index}-${sample.slice(0, 20)}`}
+                          className="rounded-2xl border border-[#eae8e1] bg-[#fcfbf8] p-4 transition hover:border-[#dcdad1]"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex min-w-0 gap-3">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-semibold text-brand">
+                                {index + 1}
+                              </div>
+
+                              <p className="line-clamp-4 text-sm leading-6 text-ink/70">
+                                {sample}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSample(index)}
+                              disabled={removingIndex === index}
+                              className="shrink-0 rounded-lg p-2 text-muted transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                              aria-label={`Remove sample ${index + 1}`}
+                            >
+                              {removingIndex === index ? (
+                                <LoaderCircle
+                                  size={16}
+                                  className="animate-spin"
+                                />
+                              ) : (
+                                <Trash2 size={16} />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Voice profile */}
+            <section className="rounded-3xl border border-[#eae8e1] bg-white p-6 shadow-[0_4px_24px_rgba(37,42,37,0.03)] sm:p-7">
+              <div className="mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3f2ed] text-[#77796f]">
+                    <WandSparkles size={18} />
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-semibold text-ink">
+                      Your voice profile
+                    </h2>
+
+                    <p className="mt-0.5 text-xs text-muted">
+                      Your personal writing fingerprint.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-muted">
+                  Analyze your samples to create a reusable profile for
+                  “Sound Like Me.”
+                </p>
+              </div>
 
               <button
                 type="button"
-                onClick={handleAddSample}
-                disabled={
-                  isAddingSample ||
-                  voiceSamples.length >= MAX_SAMPLES ||
-                  wordCount < MIN_WORDS
-                }
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-semibold text-cream transition hover:bg-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={handleAnalyzeVoice}
+                disabled={isAnalyzing || voiceSamples.length < 3}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {isAddingSample ? (
+                {isAnalyzing ? (
                   <>
                     <LoaderCircle
-                      size={16}
+                      size={18}
                       className="animate-spin"
                     />
-                    Saving...
+                    Analyzing your voice...
                   </>
                 ) : (
                   <>
-                    Add sample
-                    <ArrowUpRight size={16} />
+                    <Sparkles size={18} />
+                    {voiceProfile
+                      ? 'Re-analyze my voice'
+                      : 'Analyze my voice'}
                   </>
                 )}
               </button>
-            </div>
 
-            {/* Saved samples */}
-            {voiceSamples.length > 0 && (
-              <div className="mt-7 space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-forest/40">
-                  Saved samples
-                </h3>
+              {voiceSamples.length < 3 && (
+                <p className="mt-3 text-center text-xs leading-5 text-muted">
+                  Add {3 - voiceSamples.length} more sample
+                  {3 - voiceSamples.length === 1 ? '' : 's'} to unlock
+                  voice analysis.
+                </p>
+              )}
 
-                {voiceSamples.map((sample, index) => (
-                  <div
-                    key={`${index}-${sample.slice(0, 20)}`}
-                    className="rounded-2xl border border-forest/10 bg-cream/40 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-semibold text-forest">
-                          {index + 1}
-                        </div>
+              {voiceProfile && (
+                <div className="mt-6 space-y-4">
 
-                        <p className="line-clamp-4 text-sm leading-6 text-forest/70">
-                          {sample}
+                  {/* Summary */}
+                  <div className="rounded-2xl bg-[#edf2eb] p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted">
+                      Summary
+                    </p>
+
+                    <p className="mt-2 text-sm leading-6 text-ink/70">
+                      {voiceProfile.summary ||
+                        'Your writing voice has been analyzed and is ready to use.'}
+                    </p>
+                  </div>
+
+                  {/* Profile details */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {[
+                      ['Tone', voiceProfile.tone],
+                      ['Formality', voiceProfile.formality],
+                      [
+                        'Sentence style',
+                        voiceProfile.sentenceStyle,
+                      ],
+                      [
+                        'Vocabulary',
+                        voiceProfile.vocabulary,
+                      ],
+                      ['Rhythm', voiceProfile.rhythm],
+                      [
+                        'Personality',
+                        voiceProfile.personality,
+                      ],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded-2xl border border-[#eae8e1] bg-[#fcfbf8] p-3.5"
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-[1px] text-muted">
+                          {label}
+                        </p>
+
+                        <p className="mt-1.5 text-sm leading-5 text-ink/70">
+                          {value || 'Not specified'}
                         </p>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSample(index)}
-                        disabled={removingIndex === index}
-                        className="shrink-0 rounded-lg p-2 text-forest/35 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                        aria-label={`Remove sample ${index + 1}`}
-                      >
-                        {removingIndex === index ? (
-                          <LoaderCircle
-                            size={16}
-                            className="animate-spin"
-                          />
-                        ) : (
-                          <Trash2 size={16} />
-                        )}
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
 
-          {/* Voice profile */}
-          <section className="rounded-3xl border border-forest/10 bg-white p-5 shadow-sm sm:p-7">
-            <div className="mb-5">
-              <div className="flex items-center gap-2">
-                <WandSparkles
-                  size={17}
-                  className="text-terracotta"
-                />
+                  {/* Writing patterns */}
+                  {Array.isArray(voiceProfile.writingPatterns) &&
+                    voiceProfile.writingPatterns.length > 0 && (
+                      <div className="rounded-2xl border border-[#eae8e1] bg-white p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted">
+                          Writing patterns
+                        </p>
 
-                <h2 className="font-serif text-2xl text-forest">
-                  Your voice profile
-                </h2>
-              </div>
-
-              <p className="mt-1 text-sm leading-6 text-forest/50">
-                Analyze your samples to create a reusable profile for
-                “Sound Like Me.”
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleAnalyzeVoice}
-              disabled={isAnalyzing || voiceSamples.length < 3}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-forest px-5 py-3.5 text-sm font-semibold text-cream transition hover:bg-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isAnalyzing ? (
-                <>
-                  <LoaderCircle
-                    size={18}
-                    className="animate-spin"
-                  />
-                  Analyzing your voice...
-                </>
-              ) : (
-                <>
-                  <Sparkles size={18} />
-                  {voiceProfile
-                    ? 'Re-analyze my voice'
-                    : 'Analyze my voice'}
-                </>
+                        <ul className="mt-3 space-y-2">
+                          {voiceProfile.writingPatterns.map(
+                            (pattern, index) => (
+                              <li
+                                key={`${pattern}-${index}`}
+                                className="flex gap-2 text-sm leading-6 text-ink/65"
+                              >
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+                                <span>{pattern}</span>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                </div>
               )}
-            </button>
 
-            {voiceSamples.length < 3 && (
-              <p className="mt-3 text-center text-xs text-forest/40">
-                Add {3 - voiceSamples.length} more sample
-                {3 - voiceSamples.length === 1 ? '' : 's'} to unlock
-                voice analysis.
-              </p>
-            )}
+              {!voiceProfile && (
+                <div className="mt-6 rounded-2xl border border-dashed border-[#dcdad1] bg-[#fcfbf8] p-6 text-center">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-muted">
+                    <Brain size={20} />
+                  </div>
 
-            {voiceProfile && (
-              <div className="mt-6 space-y-4">
-                <div className="rounded-2xl bg-cream/60 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-forest/40">
-                    Summary
+                  <p className="text-sm font-semibold text-ink">
+                    No voice profile yet
                   </p>
 
-                  <p className="mt-2 text-sm leading-6 text-forest/70">
-                    {voiceProfile.summary ||
-                      'Your writing voice has been analyzed and is ready to use.'}
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    Add three or more samples and analyze them to create your
+                    personal writing profile.
                   </p>
                 </div>
+              )}
+            </section>
+          </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    ['Tone', voiceProfile.tone],
-                    ['Formality', voiceProfile.formality],
-                    [
-                      'Sentence style',
-                      voiceProfile.sentenceStyle,
-                    ],
-                    [
-                      'Vocabulary',
-                      voiceProfile.vocabulary,
-                    ],
-                    ['Rhythm', voiceProfile.rhythm],
-                    [
-                      'Personality',
-                      voiceProfile.personality,
-                    ],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="rounded-2xl border border-forest/10 bg-white p-3.5"
-                    >
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-forest/35">
-                        {label}
-                      </p>
+          {/* Bottom note */}
+          <div className="flex items-start gap-3 rounded-2xl border border-[#eae8e1] bg-white px-5 py-4">
+            <CheckCircle2
+              size={17}
+              className="mt-0.5 shrink-0 text-brand"
+            />
 
-                      <p className="mt-1.5 text-sm leading-5 text-forest/70">
-                        {value || 'Not specified'}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+            <p className="text-xs leading-5 text-muted">
+              Your writing samples and voice profile are tied to your account,
+              so your “Sound Like Me” setup can follow you across devices.
+            </p>
+          </div>
 
-                {Array.isArray(voiceProfile.writingPatterns) &&
-                  voiceProfile.writingPatterns.length > 0 && (
-                    <div className="rounded-2xl border border-forest/10 bg-white p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-forest/40">
-                        Writing patterns
-                      </p>
-
-                      <ul className="mt-3 space-y-2">
-                        {voiceProfile.writingPatterns.map(
-                          (pattern, index) => (
-                            <li
-                              key={`${pattern}-${index}`}
-                              className="flex gap-2 text-sm leading-6 text-forest/65"
-                            >
-                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-terracotta" />
-                              <span>{pattern}</span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                  )}
-              </div>
-            )}
-
-            {!voiceProfile && (
-              <div className="mt-6 rounded-2xl border border-dashed border-forest/15 bg-cream/40 p-5 text-center">
-                <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-forest/50">
-                  <Brain size={20} />
-                </div>
-
-                <p className="text-sm font-medium text-forest">
-                  No voice profile yet
-                </p>
-
-                <p className="mt-1 text-xs leading-5 text-forest/40">
-                  Add three or more samples and analyze them to create your
-                  personal writing profile.
-                </p>
-              </div>
-            )}
-          </section>
-        </div>
-
-        {/* Bottom note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-forest/10 bg-white/60 px-4 py-4">
-          <CheckCircle2
-            size={17}
-            className="mt-0.5 shrink-0 text-forest/50"
-          />
-
-          <p className="text-xs leading-5 text-forest/45">
-            Your writing samples and voice profile are tied to your account,
-            so your “Sound Like Me” setup can follow you across devices.
-          </p>
         </div>
       </div>
     </div>

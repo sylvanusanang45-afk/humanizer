@@ -1,3 +1,5 @@
+
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 
@@ -6,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function MainLayout() {
   const { user, signOut } = useAuth()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const handleSignOut = async () => {
     const { error } = await signOut()
@@ -18,7 +21,10 @@ export default function MainLayout() {
   return (
     <div className="flex min-h-screen bg-cream">
       <div className="hidden lg:block">
-        <Sidebar />
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((current) => !current)}
+        />
       </div>
 
       <main className="min-w-0 flex-1">

@@ -14,17 +14,24 @@ import {
   Bookmark,
   BookmarkCheck,
   Star,
+  LoaderCircle,
 } from 'lucide-react'
 
 import { useWriting } from '../context/WritingContext'
 
 export default function ResultsPanel({
   versions = [],
+  activeVersionId,
+  onActiveVersionChange,
   originalText = '',
   onVersionChange,
   onRefine,
+  isRefining = false,
 }) {
-  const [activeVersion, setActiveVersion] = useState(versions[0]?.id)
+  const [internalActiveVersionId, setInternalActiveVersionId] = useState(
+    versions[0]?.id || null
+  )
+
   const [showComparison, setShowComparison] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
@@ -33,15 +40,24 @@ export default function ResultsPanel({
   const [historyByVersion, setHistoryByVersion] = useState({})
 
   const {
-    savedVersions,
+    savedVersions = [],
     saveVersion,
     removeSavedVersion,
   } = useWriting()
 
-  const lastSavedContent = useRef(versions[0]?.content || '')
+  const lastSavedContent = useRef('')
+
+  const selectedVersionId =
+    activeVersionId || internalActiveVersionId || versions[0]?.id
 
   const currentVersion =
-    versions.find((version) => version.id === activeVersion) || versions[0]
+    versions.find((version) => version.id === selectedVersionId) ||
+    versions[0]
+
+  const currentContent =
+    typeof currentVersion?.text === 'string'
+      ? currentVersion.text
+      : ''
 
   const currentHistory = currentVersion
     ? historyByVersion[currentVersion.id] || []
@@ -54,23 +70,48 @@ export default function ResultsPanel({
     : false
 
   useEffect(() => {
-    lastSavedContent.current = currentVersion?.content || ''
+    if (!versions.length) {
+      setInternalActiveVersionId(null)
+      return
+    }
+
+    const selectedExists = versions.some(
+      (version) => version.id === selectedVersionId
+    )
+
+    if (!selectedExists) {
+      setInternalActiveVersionId(versions[0].id)
+      onActiveVersionChange?.(versions[0].id)
+    }
+  }, [versions, selectedVersionId, onActiveVersionChange])
+
+  useEffect(() => {
+    lastSavedContent.current = currentContent
     setShowHistory(false)
-  }, [activeVersion])
+  }, [selectedVersionId])
 
   if (!versions.length || !currentVersion) return null
 
-  const wordCount = currentVersion.content
+  const wordCount = currentContent
     .trim()
     .split(/\s+/)
     .filter(Boolean).length
 
+  const handleSelectVersion = (versionId) => {
+    setInternalActiveVersionId(versionId)
+    onActiveVersionChange?.(versionId)
+  }
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(currentVersion.content)
+      await navigator.clipboard.writeText(currentContent)
       setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    } catch {
+
+      setTimeout(() => {
+        setCopied(false)
+      }, 1800)
+    } catch (error) {
+      console.error('Copy failed:', error)
       setCopied(false)
     }
   }
@@ -86,16 +127,17 @@ export default function ResultsPanel({
 
   const saveSnapshot = () => {
     const previousContent = lastSavedContent.current
-    const currentContent = currentVersion.content
 
-    if (!previousContent || previousContent === currentContent) return
+    if (!previousContent || previousContent === currentContent) {
+      return
+    }
 
     setHistoryByVersion((previous) => ({
       ...previous,
       [currentVersion.id]: [
         {
           id: Date.now(),
-          content: previousContent,
+          text: previousContent,
           label: 'Previous edit',
           time: new Date().toLocaleTimeString([], {
             hour: '2-digit',
@@ -110,13 +152,15 @@ export default function ResultsPanel({
   }
 
   const restoreSnapshot = (snapshot) => {
-    if (currentVersion.content !== snapshot.content) {
+    const snapshotText = snapshot.text ?? snapshot.content ?? ''
+
+    if (currentContent !== snapshotText) {
       setHistoryByVersion((previous) => ({
         ...previous,
         [currentVersion.id]: [
           {
             id: Date.now(),
-            content: currentVersion.content,
+            text: currentContent,
             label: 'Saved before restore',
             time: new Date().toLocaleTimeString([], {
               hour: '2-digit',
@@ -128,15 +172,15 @@ export default function ResultsPanel({
       }))
     }
 
-    onVersionChange?.(currentVersion.id, snapshot.content)
-    lastSavedContent.current = snapshot.content
+    onVersionChange?.(currentVersion.id, snapshotText)
+    lastSavedContent.current = snapshotText
     setShowHistory(false)
   }
 
   const handleRefine = () => {
-    if (!refinement.trim()) return
+    if (!refinement.trim() || isRefining) return
 
-    onRefine?.(currentVersion.id, refinement.trim())
+    onRefine?.(refinement.trim())
     setRefinement('')
   }
 
@@ -163,6 +207,7 @@ export default function ResultsPanel({
         </div>
 
         <button
+          type="button"
           onClick={() => setShowComparison(!showComparison)}
           className="flex items-center gap-2 rounded-xl border border-[#e5e4dc] px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-paper"
         >
@@ -186,6 +231,7 @@ export default function ResultsPanel({
         </div>
 
         <button
+          type="button"
           onClick={() => setShowSaved(!showSaved)}
           className="flex items-center gap-2 text-sm font-medium text-brand hover:text-brand-dark"
         >
@@ -211,34 +257,55 @@ export default function ResultsPanel({
             </p>
           ) : (
             <div className="space-y-3">
-              {savedVersions.map((savedVersion) => (
-                <div
-                  key={savedVersion.id}
-                  className="rounded-xl border border-[#eeece6] bg-[#fcfbf8] p-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-sm font-semibold text-ink">
-                        {savedVersion.label}
-                      </h4>
+              {savedVersions.map((savedVersion) => {
+                const savedText =
+                  savedVersion.text ?? savedVersion.content ?? ''
 
-                      <p className="mt-1 text-xs text-muted">
-                        Saved {savedVersion.savedAt}
-                      </p>
-                    </div>
+                return (
+                  <div
+                    key={savedVersion.id}
+                    className="rounded-xl border border-[#eeece6] bg-[#fcfbf8] p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-semibold text-ink">
+                          {savedVersion.label}
+                        </h4>
 
-                    <div className="flex gap-2">
+                        <p className="mt-1 text-xs text-muted">
+                          Saved {savedVersion.savedAt}
+                        </p>
+                      </div>
+
                       <button
+                        type="button"
                         onClick={() => {
-                          setActiveVersion(savedVersion.id)
+                          const exists = versions.some(
+                            (version) => version.id === savedVersion.id
+                          )
+
+                          if (exists) {
+                            handleSelectVersion(savedVersion.id)
+                          }
+
                           setShowSaved(false)
                         }}
-                        className="rounded-lg bg-[#edf2eb] px-3 py-2 text-xs font-semibold text-brand hover:bg-[#dfe9dc]"
+                        disabled={
+                          !versions.some(
+                            (version) => version.id === savedVersion.id
+                          )
+                        }
+                        className="rounded-lg bg-[#edf2eb] px-3 py-2 text-xs font-semibold text-brand hover:bg-[#dfe9dc] disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        Open version
+                        {versions.some(
+                          (version) => version.id === savedVersion.id
+                        )
+                          ? 'Open version'
+                          : 'Not in current results'}
                       </button>
 
                       <button
+                        type="button"
                         onClick={() =>
                           removeSavedVersion(savedVersion.id)
                         }
@@ -247,13 +314,13 @@ export default function ResultsPanel({
                         Remove
                       </button>
                     </div>
-                  </div>
 
-                  <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-ink">
-                    {savedVersion.content}
-                  </p>
-                </div>
-              ))}
+                    <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-ink">
+                      {savedText}
+                    </p>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -268,8 +335,9 @@ export default function ResultsPanel({
 
           return (
             <button
+              type="button"
               key={version.id}
-              onClick={() => setActiveVersion(version.id)}
+              onClick={() => handleSelectVersion(version.id)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
                 currentVersion.id === version.id
                   ? 'bg-brand text-white'
@@ -300,6 +368,7 @@ export default function ResultsPanel({
 
           <div className="flex flex-wrap gap-2">
             <button
+              type="button"
               onClick={toggleSave}
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 isSaved
@@ -317,6 +386,7 @@ export default function ResultsPanel({
             </button>
 
             <button
+              type="button"
               onClick={() => setShowHistory(!showHistory)}
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 showHistory
@@ -334,6 +404,7 @@ export default function ResultsPanel({
             </button>
 
             <button
+              type="button"
               onClick={handleCopy}
               className="flex items-center gap-2 rounded-lg bg-paper px-3 py-2 text-sm font-medium text-ink transition hover:bg-[#e9e7de]"
             >
@@ -376,11 +447,12 @@ export default function ResultsPanel({
                       </p>
 
                       <p className="mt-1 truncate text-xs text-muted">
-                        {snapshot.content}
+                        {snapshot.text ?? snapshot.content ?? ''}
                       </p>
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => restoreSnapshot(snapshot)}
                       className="flex shrink-0 items-center gap-1.5 rounded-lg bg-[#edf2eb] px-3 py-2 text-xs font-semibold text-brand transition hover:bg-[#dfe9dc]"
                     >
@@ -397,7 +469,7 @@ export default function ResultsPanel({
         {/* Editable writing */}
         <div className="relative mt-4">
           <textarea
-            value={currentVersion.content}
+            value={currentContent}
             onChange={(event) =>
               onVersionChange?.(currentVersion.id, event.target.value)
             }
@@ -442,8 +514,9 @@ export default function ResultsPanel({
           value={refinement}
           onChange={(event) => setRefinement(event.target.value)}
           rows={2}
+          disabled={isRefining}
           placeholder="E.g. Make it warmer but still professional..."
-          className="w-full resize-y rounded-xl border border-[#eae8e1] bg-[#fcfbf8] p-4 text-sm leading-7 text-ink outline-none transition placeholder:text-[#aaa99f] focus:border-[#9caf9d]"
+          className="w-full resize-y rounded-xl border border-[#eae8e1] bg-[#fcfbf8] p-4 text-sm leading-7 text-ink outline-none transition placeholder:text-[#aaa99f] focus:border-[#9caf9d] disabled:opacity-60"
         />
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -454,11 +527,20 @@ export default function ResultsPanel({
           <button
             type="button"
             onClick={handleRefine}
-            disabled={!refinement.trim()}
+            disabled={!refinement.trim() || isRefining}
             className="flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Sparkles size={15} />
-            Refine version
+            {isRefining ? (
+              <>
+                <LoaderCircle size={15} className="animate-spin" />
+                Refining...
+              </>
+            ) : (
+              <>
+                <Sparkles size={15} />
+                Refine version
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -482,7 +564,7 @@ export default function ResultsPanel({
             </p>
 
             <p className="whitespace-pre-wrap text-sm leading-7 text-ink">
-              {currentVersion.content}
+              {currentContent}
             </p>
           </div>
         </div>

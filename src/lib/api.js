@@ -1,7 +1,9 @@
+
 import { supabase } from './supabase'
 
-const API_BASE_URL =
+const API_BASE_URL = (
   import.meta.env.VITE_API_URL || 'http://localhost:5000'
+).replace(/\/+$/, '')
 
 export async function humanizerFetch(path, options = {}) {
   const {
@@ -15,9 +17,17 @@ export async function humanizerFetch(path, options = {}) {
     throw new Error('Please sign in again to continue.')
   }
 
-  return fetch(`${API_BASE_URL}${path}`, {
+  // Accept either a relative API path or a full backend URL.
+  const requestUrl = /^https?:\/\//i.test(path)
+    ? path
+    : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`
+
+  console.log('HUMANIZER REQUEST URL:', requestUrl)
+
+  return fetch(requestUrl, {
     ...options,
     headers: {
+      'Content-Type': 'application/json',
       ...options.headers,
       Authorization: `Bearer ${session.access_token}`,
     },
