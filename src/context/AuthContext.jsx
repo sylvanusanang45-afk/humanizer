@@ -10,6 +10,13 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
+// Humanizer production URL.
+// Keep this separate from the Todo app's authentication configuration.
+const HUMANIZER_URL = 'https://humanizer-sylver.vercel.app'
+
+const AUTH_REDIRECT = `${HUMANIZER_URL}/`
+const PASSWORD_RESET_REDIRECT = `${HUMANIZER_URL}/reset-password`
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -44,14 +51,17 @@ export function AuthProvider({ children }) {
   }, [])
 
   const signIn = (email, password) =>
-    supabase.auth.signInWithPassword({ email, password })
+    supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
   const signUp = (email, password) =>
     supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: AUTH_REDIRECT,
       },
     })
 
@@ -60,13 +70,13 @@ export function AuthProvider({ children }) {
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: AUTH_REDIRECT,
       },
     })
 
   const resetPassword = (email) =>
     supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: PASSWORD_RESET_REDIRECT,
     })
 
   const updatePassword = (password) =>
